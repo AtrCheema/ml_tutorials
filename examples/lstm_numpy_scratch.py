@@ -76,9 +76,16 @@ lstm_out_tf = model.predict(x=xx)
 class LSTMNP(object):
     """vanilla LSTM in pure numpy
     Only forward loop"""
-    def __init__(self, units, return_sequences=False, time_major=False):
+    def __init__(
+            self,
+            units:int,
+            return_sequences:bool = False,
+            return_states:bool = False,
+            time_major:bool = False
+    ):
         self.units = units
         self.return_sequences = return_sequences
+        self.return_states = return_states
         self.time_major = time_major
 
         self.kernel = k_vals.numpy()
@@ -87,10 +94,13 @@ class LSTMNP(object):
 
 
     def __call__(self, inputs, initial_state=None):
+        # if not time_major original inputs have shape (batch_size, lookback_steps, num_inputs)
+        # otherwise inputs will have shape (lookback_steps, batch_size, num_inputs)
 
         if not self.time_major:
             inputs = np.moveaxis(inputs, [0, 1], [1, 0])
 
+        # inputs have shape (lookback_steps, batch_size, num_inputs)
         lookback_steps, bs, ins = inputs.shape
 
         if initial_state is None:
@@ -99,7 +109,6 @@ class LSTMNP(object):
         else:
             assert len(initial_state) == 2
             h_state, c_state = initial_state
-
 
         h_states = []
         c_states = []
@@ -122,10 +131,13 @@ class LSTMNP(object):
         if self.return_sequences:
             o = h_states
 
+        if self.return_states:
+            return o, c_states
         return o
 
     def cell(self, xt, ht, ct):
-
+        """implements logic of LSTM"""
+        
         # input gate
         k_i = self.kernel[:, :self.units]
         rk_i = self.rec_kernel[:, :self.units]
