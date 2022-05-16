@@ -137,7 +137,7 @@ class LSTMNP(object):
 
     def cell(self, xt, ht, ct):
         """implements logic of LSTM"""
-        
+
         # input gate
         k_i = self.kernel[:, :self.units]
         rk_i = self.rec_kernel[:, :self.units]
