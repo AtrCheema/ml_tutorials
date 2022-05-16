@@ -1,0 +1,7 @@
+.idea/
+.ipynb_checkpoints/
+__pycache__/
+
+# docs
+docs/source/auto_examples/
+docs/source/gen_modules/

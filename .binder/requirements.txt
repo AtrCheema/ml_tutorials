@@ -1,0 +1,4 @@
+numpy
+matplotlib
+pandas
+tensorflow==2.7
