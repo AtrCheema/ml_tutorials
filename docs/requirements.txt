@@ -11,3 +11,4 @@ sphinx-gallery
 sphinx_issues
 scipy
 tensorflow==2.7
+ai4water
