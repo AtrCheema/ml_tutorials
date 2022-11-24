@@ -5,6 +5,11 @@ ANN in numpy
 """
 
 # %%imports
+# In this tutorial, we will build and train a multi layer perceptron from scratch
+# in numpy. We will implement the forward pass, batward pass, weight update so
+# that we can get the idea what actually happends under the hood when we train
+# neural networks for a particular data. The main purpose is to understand the
+# forward and backward propagation and its implementation.
 #
 # .. code-block:: python
 #
@@ -14,16 +19,28 @@ ANN in numpy
 # %%
 # data preparation
 # ------------------
+# The purpose of data prepation step in a supervised learning task is to devided our
+# data into input/output pairs. The number of input/output paris should be equal. We
+# can call one pair of input and its corresponding output as ``example``. We feed
+# many such examples to the neural network to make it learn the relationship between
+# inputs and outputs.
 #
 # .. code-block:: python
 #
 #     from ai4water.datasets import busan_beach
 #     data = busan_beach()
+#     print(data.shape)
+#     # 1446, 14
 #
 
 # %%
 # splitting
 # -----------
+# The length of the data is abvoe 1400. However, not the target column consists of many missing
+# values. This will reduce the number of examples that we will finally have at our disposal.
+# Furthermore, we will divide the total number of examples into training and validation sets.
+# We will use 70% of the examples for taining and 30% for the validation. The splitting is
+# perfomred randomly. The value of seed 2809 is for reproducibility purpose.
 #
 # .. code-block:: python
 #
@@ -45,9 +62,15 @@ ANN in numpy
 #
 #            yield X_batch, y_batch
 #
+# The purpose of ``batch_generator`` function is to divided out data (x,y) into batches.
+# The size of each batch is determined by ``size`` argument.
 
 # %%
 # hyperparameters
+# Next we define hyperparameters of out feed forward neural network or multi-layer perceptron.
+# The hyeparameters are those parameters which determine how the parameter are going to be
+# estimated. These ``parameters`` here mean weights and biases whose values are calibrated/optimized
+# due the training process.
 #
 # .. code-block:: python
 #
@@ -57,9 +80,26 @@ ANN in numpy
 #    l2_neurons = 5
 #    l3_neurons = 1
 #
+# ``lr`` is the learning rate. It determines the jump in the values of weights and biases
+# which we make at each parameter update step. The parameter update step can be performed
+# either after feeding the whole data to the neural network or feeding a single example
+# to the network or a batch of examples to the network. In this example, we will update
+# the parameters after each batch. The hyperparameter ``epochs`` determine, how many
+# times we want to show our whole data to the neural network. The values of neurons determine
+# the size of learnable parameters i.e., weights and biases in each layer. The larger
+# the neurons, the bigger is the size of weights and biases matrices, the larger
+# is the learning capacity of the network, the higher is the computation cost. The number
+# of neurons in the last layer must match the number of target/output variables. In our
+# case we have just one target variable.
 
 # %%
 # weights and biases
+# -----------------------
+# Next, we initialize our weights and biases with random numbers. We will have three
+# layers, 2 hidden and 1 output. Each of these layers will have two learable parameters
+# i.e. weights and biases. The size of the weights and biases in a layer depends upon
+# the size of inputs that it is receiving and a user defined parameter i.e. ``neurons`` which
+# is also calle ``units``.
 #
 # .. code-block:: python
 #
@@ -74,10 +114,15 @@ ANN in numpy
 #    b2 = rng_l2.standard_normal((1, l2_neurons))
 #    w3 = rng_l3.standard_normal((w2.shape[1], l3_neurons))
 #    b3 = rng_l3.standard_normal((1, l3_neurons))
+#
+# The ``default_rng`` is used to generate random numbers with reproducibility.
 
 # %%
 # Forwad pass
 # ------------
+# The forward pass consists of set of calculations which are performed on the input until
+# we get the output. In other words, it is the modification of input through the application
+# of fully connected layers.
 #
 # .. code-block:: python
 #
@@ -85,10 +130,18 @@ ANN in numpy
 #
 #        for batch_x, batch_y in batch_generator(X_train, y_train):
 #
+# Each epoch can consist of multiple batches. The actual number of batches in an
+# epoch depends upon the number of examples and batch size. If we have 100 examples
+# in our dataset and the batch size is 25, then we will have 4 batches. In this case
+# the inner loop will have 4 iterations.
 
 # %%
 ## hidden layer
 # --------------
+#
+# .. math::
+#
+#     l1_out = sigmoid(inputs*w1 + b1)
 #
 # .. code-block:: python
 #
@@ -102,6 +155,12 @@ ANN in numpy
 # %%
 # second hidden layer
 # --------------------
+# The mathematics of second hidden layer is very much similar to first hidden layer.
+# However, here we use the outputs from the first layer as inputs.
+#
+# .. math::
+#
+#      l2_out = sigmoid(l1_out * w2 + b2)
 #
 # .. code-block:: python
 #
@@ -110,8 +169,16 @@ ANN in numpy
 #
 
 # %%
-# output
-# --------
+# output layer
+# -------------
+# The output layer is also similar to other hidden layers, excep that we are not applying
+# any activation function here. Here we are performing a regression task. Had it been a
+# classification problem, we would have been interested in using a relevant activation
+# function here.
+#
+# .. math::
+#
+#      l3_out = l2_out * w3 + b3
 #
 # .. code-block:: python
 #
@@ -121,6 +188,10 @@ ANN in numpy
 # %%
 # loss calculation
 # ------------------
+# This step evaluate the performance of our model with current state of parameters. It provides us
+# a scaler value whose value would like to reduce or minimize as a result of training process. The
+# choice of loss function depends upon the task and objective. Here we are using mean squared error
+# between true and predicted values as our loss function.
 #
 # .. code-block:: python
 #
@@ -129,8 +200,12 @@ ANN in numpy
 #
 #    loss = mse(batch_y, out)
 #
+# The function ``mse`` calcuate mean squared erro between any two arrays. The first
+# array is supposed to be the true values and second array will be the prediction obtained
+# from the forward pass.
 
 # %%
+# Now we can write the how forward pass as below.
 #
 # .. code-block:: python
 #
@@ -153,17 +228,21 @@ ANN in numpy
 #            loss = mse(batch_y, l3_out)
 #            epoch_losses.append(loss)
 #
+# We are savin the loss obtained at eahc mini-batch step in a list ``epoch_losses``. This will
+# be used later for plotting purpose.
 
 # %%
 # backward pass
 # --------------
 # We are interested in finding out how much loss is contributed by the each of the parameter
-# in our neural network. We have three layers and each layer has two kinds of parameters i.e.,
+# in our neural network. So that we can tune/change the parameter accordingly. We have three
+# layers and each layer has two kinds of parameters i.e.,
 # weights and biases. Therefore, we would like to find out how much loss is contributed by weights
 # and biases in these three layers. This can be acheived by finding out the partial derivate of
 # the loss with respect to partial derivate of the specific parameter i.e., weights and biases.
 #
-# h<sub>&theta;</sub>(x) = &theta;<sub>o</sub> x + &theta;<sub>1</sub>x
+# .. math::
+#     h<sub>&theta;</sub>(x) = &theta;<sub>o</sub> x + &theta;<sub>1</sub>x
 #
 
 # %%
@@ -181,9 +260,9 @@ ANN in numpy
 # %%
 # third layer gradients
 # ------------------------
-# The third layer consisted of only two operations 1) dot product of inputs with `w3` and addition
+# The third layer consisted of only two operations 1) dot product of inputs with ``w3`` and addition
 # of `b3` bias in the result. Now during the backpropagation, we calculate three kinds of gradients
-# 1) gradient of bias `b3`, 2) gradient of weights `w3` and 3) gradient of inputs to 3rd layer
+# 1) gradient of bias ``b3``, 2) gradient of weights ``w3`` and 3) gradient of inputs to 3rd layer
 #
 # .. code-block:: python
 #
@@ -239,6 +318,9 @@ ANN in numpy
 # %%
 # parameter update
 # -------------------------
+# Now that we have calculated the gradients, we now know how much change needs to be
+# carried out in each parameter (weights and biases). It is time to update weights and
+# biases. This step is neural network libraries is carried out by the **optimizer``.
 #
 # .. code-block:: python
 #
@@ -263,10 +345,21 @@ ANN in numpy
 #            w1 -= lr * d_w1
 #            b1 -= lr * d_b1
 #
+# We can note that the parameter ``lr`` is kind of check on the change in parameters.
+# Larger the value of ``lr``, the larger will be the change and vice versa.
 
 # %%
 # model evaluation
 # -------------------------
+#
+# Once we have updated the parameters of the model i.e. we now have a new model, we
+# would like to see how this new model performs. We do this by performing the forward
+# pass with the updated parameters. However, this check is performed not on the training
+# data but on a different data which is usually called validation data. We pass the inputs
+# of the validation data through our network, calculate prediction and compare this prediction
+# with true values to calcuate a performance metric of our interest. Usually we would like
+# to see the performance of our model on more than one performance metrics of different nature.
+# The choice of performance metric is highly subjective to our task.
 #
 # .. code-block:: python
 #
@@ -288,6 +381,12 @@ ANN in numpy
 # %%
 # loss curve
 # -------------------------
+# We will get the value of ``loss`` and ``val_loss`` after each mini-batch. We would
+# be interesting in plotting these losses during the model training. We usually take
+# the average of losses and val_losses during all the mini-batches in an epoch. Thus,
+# after ``n`` epochs, we will have an array of length n  for loss and val_loss. Plotting
+# these arrays together provides us important information about the training behaviour
+# of our neural network.
 #
 # .. code-block:: python
 #
@@ -318,6 +417,9 @@ ANN in numpy
 
 # %%
 # -------------------------
+# To avoid repeatition, we can put the forward pass of our network in a fuction so that
+# can carry out this forward pass whenever we like, and calculate any desired performance
+# metric for the prediction.
 #
 # .. code-block:: python
 #
@@ -359,7 +461,7 @@ ANN in numpy
 #
 
 # %%
-# We can also evaluate model for any other peformance metric
+# Now we can also evaluate model for any other peformance metric
 #
 # .. code-block:: python
 #
@@ -369,6 +471,16 @@ ANN in numpy
 # %%
 # early stopping
 # -------------------------
+#
+# How long should we train our neural network i.e. what should be the value of epochs?
+# The answer to this question can only be given by looking at the loss and validation loss curves.
+# We should keep training our neural network as long as the performance of our network
+# is improving on validatin data i.e. as long as val_loss is decreasing. What if we
+# have set the value of epochs to 5000 and the validation loss stops decreasing after 50th epoch?
+# Should we wait for complete 5000 epochs to complete? We usually set a criteria to stop/break
+# the training loop early depeding upon the performance of our model on validation data. This is
+# called early stopping. We folloing code, we break the training loop if the validation
+# loss does not decrease for 50 consective epochs. The value of 50 is arbitrary here.
 #
 # .. code-block:: python
 #
@@ -403,6 +515,7 @@ ANN in numpy
 # %%
 # Complete code
 # ---------------
+# The complete python code which we have seen about is given as one peace below!
 
 import numpy as np
 from math import sqrt
@@ -417,6 +530,7 @@ from sklearn.preprocessing import StandardScaler
 data = busan_beach()
 #data = data.drop(data.index[317])
 #data['tetx_coppml'] = np.log(data['tetx_coppml'])
+print(data.shape)
 
 s = StandardScaler()
 data = s.fit_transform(data)
@@ -590,6 +704,4 @@ imshow(d_w1, aspect="auto", colorbar=True, title="Layer 1 Gradients", ax=ax1, sh
 imshow(d_w2, aspect="auto", colorbar=True, title="Layer 2 Gradients", ax=ax2, show=False)
 plot(d_w3, ax=ax3, show=False, title="Layer 3 Gradients")
 plt.show()
-
-
 
