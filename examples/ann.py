@@ -6,8 +6,8 @@ ANN in numpy
 
 # %%imports
 # In this tutorial, we will build and train a multi layer perceptron from scratch
-# in numpy. We will implement the forward pass, batward pass, weight update so
-# that we can get the idea what actually happends under the hood when we train
+# in numpy. We will implement the forward pass, backward pass, weight update so
+# that we can get the idea what actually happens under the hood when we train
 # neural networks for a particular data. The main purpose is to understand the
 # forward and backward propagation and its implementation.
 #
@@ -19,7 +19,7 @@ ANN in numpy
 # %%
 # data preparation
 # ------------------
-# The purpose of data prepation step in a supervised learning task is to devided our
+# The purpose of data preparation step in a supervised learning task is to divide our
 # data into input/output pairs. The number of input/output paris should be equal. We
 # can call one pair of input and its corresponding output as ``example``. We feed
 # many such examples to the neural network to make it learn the relationship between
@@ -36,11 +36,11 @@ ANN in numpy
 # %%
 # splitting
 # -----------
-# The length of the data is abvoe 1400. However, not the target column consists of many missing
+# The length of the data is above 1400. However, not the target column consists of many missing
 # values. This will reduce the number of examples that we will finally have at our disposal.
 # Furthermore, we will divide the total number of examples into training and validation sets.
-# We will use 70% of the examples for taining and 30% for the validation. The splitting is
-# perfomred randomly. The value of seed 2809 is for reproducibility purpose.
+# We will use 70% of the examples for training and 30% for the validation. The splitting is
+# performed randomly. The value of seed 2809 is for reproducibility purpose.
 #
 # .. code-block:: python
 #
@@ -96,7 +96,7 @@ ANN in numpy
 # weights and biases
 # -----------------------
 # Next, we initialize our weights and biases with random numbers. We will have three
-# layers, 2 hidden and 1 output. Each of these layers will have two learable parameters
+# layers, 2 hidden and 1 output. Each of these layers will have two learnable parameters
 # i.e. weights and biases. The size of the weights and biases in a layer depends upon
 # the size of inputs that it is receiving and a user defined parameter i.e. ``neurons`` which
 # is also calle ``units``.
@@ -118,7 +118,7 @@ ANN in numpy
 # The ``default_rng`` is used to generate random numbers with reproducibility.
 
 # %%
-# Forwad pass
+# Forward pass
 # ------------
 # The forward pass consists of set of calculations which are performed on the input until
 # we get the output. In other words, it is the modification of input through the application
@@ -136,12 +136,12 @@ ANN in numpy
 # the inner loop will have 4 iterations.
 
 # %%
-## hidden layer
+# hidden layer
 # --------------
 #
 # .. math::
 #
-#     l1_out = sigmoid(inputs*w1 + b1)
+#     l1_{out} = sigmoid(inputs*w1 + b1)
 #
 # .. code-block:: python
 #
@@ -160,7 +160,7 @@ ANN in numpy
 #
 # .. math::
 #
-#      l2_out = sigmoid(l1_out * w2 + b2)
+#      l2_{out} = sigmoid(l1_out * w2 + b2)
 #
 # .. code-block:: python
 #
@@ -171,14 +171,14 @@ ANN in numpy
 # %%
 # output layer
 # -------------
-# The output layer is also similar to other hidden layers, excep that we are not applying
+# The output layer is also similar to other hidden layers, except that we are not applying
 # any activation function here. Here we are performing a regression task. Had it been a
 # classification problem, we would have been interested in using a relevant activation
 # function here.
 #
 # .. math::
 #
-#      l3_out = l2_out * w3 + b3
+#      l3_{out} = l2_out * w3 + b3
 #
 # .. code-block:: python
 #
@@ -189,7 +189,7 @@ ANN in numpy
 # loss calculation
 # ------------------
 # This step evaluate the performance of our model with current state of parameters. It provides us
-# a scaler value whose value would like to reduce or minimize as a result of training process. The
+# a scalar value whose value would like to reduce or minimize as a result of training process. The
 # choice of loss function depends upon the task and objective. Here we are using mean squared error
 # between true and predicted values as our loss function.
 #
@@ -200,7 +200,7 @@ ANN in numpy
 #
 #    loss = mse(batch_y, out)
 #
-# The function ``mse`` calcuate mean squared erro between any two arrays. The first
+# The function ``mse`` calculate mean squared error between any two arrays. The first
 # array is supposed to be the true values and second array will be the prediction obtained
 # from the forward pass.
 
@@ -228,7 +228,7 @@ ANN in numpy
 #            loss = mse(batch_y, l3_out)
 #            epoch_losses.append(loss)
 #
-# We are savin the loss obtained at eahc mini-batch step in a list ``epoch_losses``. This will
+# We are saving the loss obtained at each mini-batch step in a list ``epoch_losses``. This will
 # be used later for plotting purpose.
 
 # %%
@@ -238,8 +238,8 @@ ANN in numpy
 # in our neural network. So that we can tune/change the parameter accordingly. We have three
 # layers and each layer has two kinds of parameters i.e.,
 # weights and biases. Therefore, we would like to find out how much loss is contributed by weights
-# and biases in these three layers. This can be acheived by finding out the partial derivate of
-# the loss with respect to partial derivate of the specific parameter i.e., weights and biases.
+# and biases in these three layers. This can be achieved by finding out the partial derivative of
+# the loss with respect to partial derivative of the specific parameter i.e., weights and biases.
 #
 # .. math::
 #     h<sub>&theta;</sub>(x) = &theta;<sub>o</sub> x + &theta;<sub>1</sub>x
@@ -311,7 +311,7 @@ ANN in numpy
 #
 #    # weight first layer
 #    input_grads_w1 = np.dot(d_sig1_out, w1.T)  # -> (batch_size, num_ins)
-#    # derivate of (the propagated loss) w.r.t weights
+#    # derivative of (the propagated loss) w.r.t weights
 #    d_w1 = np.dot(batch_x.T, d_sig1_out)  # -> (num_ins, l1_neurons)
 #
 
@@ -357,7 +357,7 @@ ANN in numpy
 # pass with the updated parameters. However, this check is performed not on the training
 # data but on a different data which is usually called validation data. We pass the inputs
 # of the validation data through our network, calculate prediction and compare this prediction
-# with true values to calcuate a performance metric of our interest. Usually we would like
+# with true values to calculate a performance metric of our interest. Usually we would like
 # to see the performance of our model on more than one performance metrics of different nature.
 # The choice of performance metric is highly subjective to our task.
 #
@@ -417,7 +417,7 @@ ANN in numpy
 
 # %%
 # -------------------------
-# To avoid repeatition, we can put the forward pass of our network in a fuction so that
+# To avoid repetition, we can put the forward pass of our network in a function so that
 # can carry out this forward pass whenever we like, and calculate any desired performance
 # metric for the prediction.
 #
@@ -461,7 +461,7 @@ ANN in numpy
 #
 
 # %%
-# Now we can also evaluate model for any other peformance metric
+# Now we can also evaluate model for any other performance metric
 #
 # .. code-block:: python
 #
@@ -475,12 +475,12 @@ ANN in numpy
 # How long should we train our neural network i.e. what should be the value of epochs?
 # The answer to this question can only be given by looking at the loss and validation loss curves.
 # We should keep training our neural network as long as the performance of our network
-# is improving on validatin data i.e. as long as val_loss is decreasing. What if we
+# is improving on validation data i.e. as long as val_loss is decreasing. What if we
 # have set the value of epochs to 5000 and the validation loss stops decreasing after 50th epoch?
 # Should we wait for complete 5000 epochs to complete? We usually set a criteria to stop/break
-# the training loop early depeding upon the performance of our model on validation data. This is
-# called early stopping. We folloing code, we break the training loop if the validation
-# loss does not decrease for 50 consective epochs. The value of 50 is arbitrary here.
+# the training loop early depending upon the performance of our model on validation data. This is
+# called early stopping. We following code, we break the training loop if the validation
+# loss does not decrease for 50 consecutive epochs. The value of 50 is arbitrary here.
 #
 # .. code-block:: python
 #
