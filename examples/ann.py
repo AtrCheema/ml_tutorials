@@ -13,6 +13,7 @@ ANN in numpy
 #
 # .. code-block:: python
 #
+#    import math
 #    import numpy as np
 #
 
@@ -511,6 +512,26 @@ ANN in numpy
 #            break
 #
 
+# %%
+# weight initialization
+# -------------------------
+#
+# .. code-block:: python
+#
+#    def glorot_initializer(
+#        shape:tuple,
+#        scale:float = 1.0,
+#        seed:int = 313
+#    )->np.ndarray:
+#        ng_l1 = default_rng(seed)
+#        scale /= max(1., (shape[0] + shape[1]) / 2.)
+#        limit = math.sqrt(3.0 * scale)
+#        return ng_l1.uniform(-limit, limit, size=shape)
+#
+#    w1 = glorot_initializer((dataset.num_ins, l1_neurons))
+#    w2 = glorot_initializer((w1.shape[1], l2_neurons))
+#    w3 = glorot_initializer((w2.shape[1], l3_neurons))
+#
 
 # %%
 # Complete code
@@ -518,7 +539,7 @@ ANN in numpy
 # The complete python code which we have seen about is given as one peace below!
 
 import numpy as np
-from math import sqrt
+import math
 import matplotlib.pyplot as plt
 from easy_mpl import plot, imshow
 from numpy.random import default_rng
@@ -580,6 +601,7 @@ def eval_model(x, y, metric_name)->float:
 
 
 # hyperparameters
+batch_size = 32
 lr = 0.001
 epochs = 1000
 l1_neurons = 10
@@ -588,17 +610,26 @@ l3_neurons = 1
 
 # parameters (weights and biases)
 
-scale = 1/max(1., (2+2)/2.)
-limit = sqrt(3.0 * scale)
+def glorot_initializer(
+        shape:tuple,
+        scale:float = 1.0,
+        seed:int = 313
+)->np.ndarray:
+    ng_l1 = default_rng(seed)
+    scale /= max(1., (shape[0] + shape[1]) / 2.)
+    limit = math.sqrt(3.0 * scale)
+    return ng_l1.uniform(-limit, limit, size=shape)
+
+
 rng_l1 = default_rng(313)
 rng_l2 = default_rng(313)
 rng_l3 = default_rng(313)
-w1 = rng_l1.standard_normal((dataset.num_ins, l1_neurons))
-b1 = rng_l1.standard_normal((1, l1_neurons))
-w2 = rng_l2.standard_normal((w1.shape[1], l2_neurons))
-b2 = rng_l2.standard_normal((1, l2_neurons))
-w3 = rng_l3.standard_normal((w2.shape[1], l3_neurons))
-b3 = rng_l3.standard_normal((1, l3_neurons))
+w1 = glorot_initializer((dataset.num_ins, l1_neurons))
+b1 = np.zeros((1, l1_neurons))
+w2 = glorot_initializer((w1.shape[1], l2_neurons))
+b2 = np.zeros((1, l2_neurons))
+w3 = glorot_initializer((w2.shape[1], l3_neurons))
+b3 = np.zeros((1, l3_neurons))
 
 train_losses = np.full(epochs, fill_value=np.nan)
 val_losses = np.full(epochs, fill_value=np.nan)
@@ -612,7 +643,7 @@ for e in range(epochs):
 
     epoch_losses = []
 
-    for batch_x, batch_y in batch_generator(X_train, y_train):
+    for batch_x, batch_y in batch_generator(X_train, y_train, size=batch_size):
 
         # FORWARD PASS
         l1_out = np.dot(batch_x, w1) + b1
@@ -704,4 +735,26 @@ imshow(d_w1, aspect="auto", colorbar=True, title="Layer 1 Gradients", ax=ax1, sh
 imshow(d_w2, aspect="auto", colorbar=True, title="Layer 2 Gradients", ax=ax2, show=False)
 plot(d_w3, ax=ax3, show=False, title="Layer 3 Gradients")
 plt.show()
+
+
+# %%
+# comparison with tensorflow
+# ---------------------------
+#
+# .. code-block:: python
+#
+#    from ai4water import Model
+#    model = Model(
+#        model = {"layers": {
+#         "Input": {"shape": (dataset.num_ins,)},
+#         "Dense": l1_neurons,
+#         "Dense_2": l2_neurons,
+#         "Dense_3": l3_neurons
+#        }},
+#        lr=lr,
+#        batch_size=batch_size,
+#        epochs=epochs,
+#        optimizer="SGD"
+#    )
+#    h = model.fit(X_train, y=y_train, validation_data=(X_val, y_val))
 
