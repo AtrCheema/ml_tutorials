@@ -1,11 +1,13 @@
+"""
+=================
+utility functions
+=================
+"""
 
 from typing import Union, Tuple
 
 import numpy as np
 
-
-# todo : when inputs and outputs are same
-# todo : make use of output_steps
 
 def prepare_data(
         data: np.ndarray,
