@@ -720,7 +720,7 @@ for e in range(epochs):
 
 
 plot(train_losses, label="Training", show=False)
-plot(val_losses, label="Validation", grid=True)
+plot(val_losses, label="Validation", ax_kws=dict(grid=True))
 
 print(eval_model(X_val, y_val, "r2"))
 
