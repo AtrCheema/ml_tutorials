@@ -9,7 +9,13 @@ deep learning models/algorithms like LSTM/RNN.
 """
 
 import numpy as np
-np.__version__
+
+import tensorflow as tf
+from tensorflow.keras.layers import Input, LSTM, Dense
+from tensorflow.keras.models import Model
+
+print("tf: ", tf.__version__)
+print("np: ", np.__version__)
 
 from utils import prepare_data
 # %%
@@ -27,9 +33,35 @@ data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
 print(data[0:10])  
 print('\n {} \n'.format(data.shape))
 print(data[-10:])
+
+# %%
 x, _y, y = prepare_data(data, num_inputs=1, num_outputs=1, lookback=4)
 
 print(x.shape, _y.shape, y.shape)
+
+# %%
+
+x[0]
+
+# %%
+
+_y[0]
+
+# %%
+
+y[0]
+
+# %%
+
+x[1]
+
+# %%
+
+_y[1]
+
+# %%
+
+y[1]
 
 # %%
 # Here we create a simple dataset with 2000 rows and 6 columns. Each column can represent
@@ -49,6 +81,30 @@ print(data[-10:])
 x, _y, y = prepare_data(data, num_inputs=6, num_outputs=6, lookback=4)
 
 print(x.shape, _y.shape, y.shape)
+
+# %%
+
+x[0]
+
+# %%
+
+_y[0]
+
+# %%
+
+y[0]
+
+# %%
+
+x[1]
+
+# %%
+
+_y[1]
+
+# %%
+
+y[1]
 
 # %%
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4)
@@ -368,9 +424,7 @@ data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
 x, _y, y = prepare_data(data, num_inputs=num_inputs, lookback=lookback)
 print(x.shape, _y.shape, y.shape)
 
-from tensorflow.keras.layers import Input, LSTM, Dense
-from tensorflow.keras.models import Model
-
+# %%
 inputs = Input(shape=(lookback, num_inputs))
 lstm = LSTM(32)(inputs)
 output = Dense(1)(lstm)
@@ -378,6 +432,7 @@ model = Model(inputs=inputs, outputs=output)
 
 model.compile(optimizer='adam', loss='mse')
 
+# %%
 model.fit(x, y, epochs=2, batch_size=128)
 
 pred = model.predict(x)
