@@ -725,15 +725,15 @@ plot(val_losses, label="Validation", ax_kws=dict(grid=True))
 print(eval_model(X_val, y_val, "r2"))
 
 _, (ax1, ax2, ax3) = plt.subplots(3, figsize=(7, 6), gridspec_kw={"hspace": 0.4})
-imshow(w1, aspect="auto", colorbar=True, title="Layer 1 Weights", ax=ax1, show=False)
-imshow(w2, aspect="auto", colorbar=True, title="Layer 2 Weights", ax=ax2, show=False)
+imshow(w1, aspect="auto", colorbar=True, ax_kws=dict(title="Layer 1 Weights"), ax=ax1, show=False)
+imshow(w2, aspect="auto", colorbar=True, ax_kws=dict(title="Layer 2 Weights"), ax=ax2, show=False)
 plot(w3, ax=ax3, show=False, title="Layer 3 Weights")
 plt.show()
 
 _, (ax1, ax2, ax3) = plt.subplots(3, figsize=(7, 6), gridspec_kw={"hspace": 0.4})
-imshow(d_w1, aspect="auto", colorbar=True, title="Layer 1 Gradients", ax=ax1, show=False)
-imshow(d_w2, aspect="auto", colorbar=True, title="Layer 2 Gradients", ax=ax2, show=False)
-plot(d_w3, ax=ax3, show=False, title="Layer 3 Gradients")
+imshow(d_w1, aspect="auto", colorbar=True, ax_kws=dict(title="Layer 1 Gradients"), ax=ax1, show=False)
+imshow(d_w2, aspect="auto", colorbar=True, ax_kws=dict(title="Layer 2 Gradients"), ax=ax2, show=False)
+plot(d_w3, ax=ax3, show=False, ax_kws=dict(title="Layer 3 Gradients"))
 plt.show()
 
 
