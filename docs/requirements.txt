@@ -13,3 +13,6 @@ scipy
 tensorflow==2.7
 #ai4water
 protobuf==3.19.1
+numpy==1.21.6
+easy_mpl
+SeqMetrics
