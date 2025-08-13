@@ -323,6 +323,33 @@ _y[1]
 y[1]
 
 # %%
+# using know future inputs 
+x, _y, y = prepare_data(data, num_inputs=5, 
+                        lookback=4, 
+                        output_steps=2,
+                        input_steps=2,
+                        forecast_len=4,
+                        known_future_inputs=True)
+
+print(x.shape, _y.shape, y.shape)
+
+# %%
+
+x[0]
+
+# %%
+
+y[0]
+
+# %%
+
+x[1]
+
+# %%
+
+y[1]
+
+# %%
 # Handling missing values
 # --------------------------
 # missing values in the output
@@ -343,7 +370,6 @@ print(data[-10:])
 
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4)
 print(x.shape, _y.shape, y.shape)
-
 
 # %%
 
@@ -414,7 +440,6 @@ y = y[non_nan_idx_x]
 
 print(x.shape, _y.shape, y.shape)
 
-
 # %%
 # making batches
 # --------------
@@ -445,3 +470,65 @@ pred = model.predict(x)
 # But in real world, we may have large datasets with e.g. millions of samples/examples
 # that cannot fit in memory.
 # In such cases, we can use a data generator to load and preprocess the data in batches ourselves.
+
+rows = 200
+lookback = 4
+num_inputs = 5
+data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
+
+from utils import prepare_data_sample
+
+x0, _, y0 = prepare_data_sample(data, index=0, lookback=lookback, num_inputs=num_inputs)
+
+x0
+
+# %%
+
+y0
+
+# %%
+
+x1, _, y1 = prepare_data_sample(data, index=1, lookback=lookback, num_inputs=num_inputs)
+
+x1
+
+# %%
+
+y1
+
+
+# %%
+
+x4, _y4, y4 = prepare_data_sample(data, index=4, lookback=lookback, num_inputs=num_inputs)
+
+x4
+
+# %%
+
+y4
+
+# %%
+
+def sample_generator(data, lookback, num_inputs, num_outputs=None, input_steps=1, forecast_step=0, forecast_len=1, known_future_inputs=False, output_steps=1):
+
+    for i in range(len(data) - lookback * input_steps + 1 - forecast_step - forecast_len * output_steps):
+        x, _y, y = prepare_data_sample(data, index=i, lookback=lookback, 
+                                        num_inputs=num_inputs, 
+                                        num_outputs=num_outputs,
+                                        input_steps=input_steps,
+                                        forecast_step=forecast_step,
+                                        forecast_len=forecast_len,
+                                        known_future_inputs=known_future_inputs,
+                                        output_steps=output_steps
+                                        )
+        yield x, _y, y
+
+gen = sample_generator(data, lookback, num_inputs)
+
+for idx, (x, _y, y) in enumerate(gen):
+    print(idx, x.shape, y.shape)
+
+# %%
+
+for idx, (x, _y, y) in enumerate(gen):
+    print(idx, x.shape, y.shape)

@@ -384,3 +384,138 @@ Either of num_inputs or num_outputs must be provided.
         y = y[mask]
 
     return x, prev_y, y
+
+
+def prepare_data_sample(
+        data: np.ndarray,
+        index: int,
+        lookback: int,
+        num_inputs: int = None,
+        num_outputs: int = None,
+        input_steps: int = 1,
+        forecast_step: int = 0,
+        forecast_len: int = 1,
+        known_future_inputs: bool = False,
+        output_steps: int = 1,
+        mask: Union[int, float, np.ndarray] = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    converts a numpy nd array into a supervised machine learning problem for a single sample.
+
+    Parameters
+    ----------
+        data :
+            nd numpy array whose first dimension represents the number
+            of examples and the second dimension represents the number of features.
+            Some of those features will be used as inputs and some will be considered
+            as outputs depending upon the values of `num_inputs` and `num_outputs`.
+        index :
+            index of the sample to prepare. Must be within valid range based on
+            lookback, forecast_step, and forecast_len parameters.
+        lookback :
+            number of previous steps/values to be used at one step.
+        num_inputs :
+            default None, number of input features in data. If None,
+            it will be calculated as features-outputs. The input data will be all
+            from start till num_outputs in second dimension.
+        num_outputs :
+            number of columns (from last) in data to be used as output.
+            If None, it will be caculated as features-inputs.
+        input_steps:
+            strides/number of steps in input data
+        forecast_step :
+            must be greater than equal to 0, which t+ith value to
+            use as target where i is the horizon. For time series prediction, we
+            can say, which horizon to predict.
+        forecast_len :
+            number of horizons/future values to predict.
+        known_future_inputs :
+            Only useful if `forecast_len`>1. If True, this
+            means, we know and use 'future inputs' while making predictions at t>0
+        output_steps :
+            step size in outputs. If =2, it means we want to predict
+            every second value from the targets
+        mask :
+            If int or float, then the sample will be skipped if target values
+            match the mask value. If None, no masking is applied.
+
+    Returns
+    -------
+        x : numpy array of shape (lookback, ins) consisting of input example
+        prev_y : numpy array consisting of previous outputs
+        y : numpy array consisting of target values of shape (outs, forecast_len)
+
+    Raises
+    ------
+        ValueError : if index is out of valid range or if data is insufficient
+    """
+    if not isinstance(data, np.ndarray):
+        if hasattr(data, 'values'):  # pandas DataFrame
+            data = data.values
+        else:
+            raise TypeError(f"unknown data type for data {data.__class__.__name__}")
+
+    if num_inputs is None and num_outputs is None:
+        raise ValueError("""
+Either of num_inputs or num_outputs must be provided.
+""")
+
+    features = data.shape[1]
+    if num_outputs is None:
+        num_outputs = features - num_inputs
+
+    if num_inputs is None:
+        num_inputs = features - num_outputs
+
+    if len(data) <= 1:
+        raise ValueError(f"Can not create batches from data with shape {data.shape}")
+
+    time_steps = lookback
+    if known_future_inputs:
+        lookback = lookback + forecast_len
+        assert forecast_len > 1, f"""
+            known_futre_inputs should be True only when making predictions at multiple 
+            horizons i.e. when forecast length/number of horizons to predict is > 1.
+            known_future_inputs: {known_future_inputs}
+            forecast_len: {forecast_len}"""
+
+    examples = len(data)
+    
+    # Check if index is within valid range
+    max_valid_index = examples - lookback * input_steps + 1 - forecast_step - forecast_len * output_steps
+    if index < 0 or index >= max_valid_index:
+        raise ValueError(f"Index {index} is out of valid range [0, {max_valid_index-1}]")
+
+    # Prepare single sample at given index
+    i = index
+    
+    # Prepare input (x)
+    stx, enx = i, i + lookback * input_steps
+    x = data[stx:enx:input_steps, 0:num_inputs]
+
+    # Prepare previous y
+    st, en = i, i + (lookback - 1) * input_steps
+    prev_y = data[st:en:input_steps, -num_outputs:]
+
+    # Prepare target (y)
+    sty = (i + time_steps * input_steps) + forecast_step - input_steps
+    eny = sty + forecast_len * output_steps
+    if num_outputs == 0:
+        y = np.array([]).reshape(forecast_len, 0)
+    else:
+        target = data[sty:eny:output_steps, -num_outputs:]
+        # transpose because we want labels to be of shape (outs, forecast_len)
+        y = target.T
+
+    # Apply mask if specified
+    if mask is not None:
+        if isinstance(mask, float) and np.isnan(mask):
+            if np.any(np.isnan(y)):
+                raise ValueError(f"Sample at index {index} contains NaN values in target")
+        else:
+            assert isinstance(mask, (int, float)), f"""
+                    Invalid mask identifier given of type: {mask.__class__.__name__}"""
+            if np.any(y == mask):
+                raise ValueError(f"Sample at index {index} contains masked values in target")
+
+    return x.astype(data.dtype), prev_y.astype(data.dtype), y.astype(data.dtype)
