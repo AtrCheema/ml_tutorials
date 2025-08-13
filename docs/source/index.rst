@@ -7,7 +7,7 @@ Welcome to ml_tutorials's documentation!
 ========================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    auto_examples/index

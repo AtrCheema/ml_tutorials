@@ -17,7 +17,7 @@ from tensorflow.keras.models import Model
 print("tf: ", tf.__version__)
 print("np: ", np.__version__)
 
-from utils import prepare_data
+from utils import prepare_data, prepare_data_sample
 # %%
 # Here we create a simple dataset with 2000 rows and 1 columns i.e. a
 # univariate time series with no covariates.
@@ -500,12 +500,11 @@ pred = model.predict(x)
 # that cannot fit in memory.
 # In such cases, we can use a data generator to load and preprocess the data in batches ourselves.
 
+cols = 6
 rows = 200
 lookback = 4
 num_inputs = 5
 data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
-
-from utils import prepare_data_sample
 
 x0, _, y0 = prepare_data_sample(data, index=0, lookback=lookback, num_inputs=num_inputs)
 
@@ -541,7 +540,7 @@ y4
 def sample_generator(data, lookback, num_inputs, num_outputs=None, input_steps=1, forecast_step=0, forecast_len=1, known_future_inputs=False, output_steps=1):
 
     for i in range(len(data) - lookback * input_steps + 1 - forecast_step - forecast_len * output_steps):
-        x, _y, y = prepare_data_sample(data, index=i, lookback=lookback, 
+        x, _, y = prepare_data_sample(data, index=i, lookback=lookback, 
                                         num_inputs=num_inputs, 
                                         num_outputs=num_outputs,
                                         input_steps=input_steps,
@@ -550,7 +549,12 @@ def sample_generator(data, lookback, num_inputs, num_outputs=None, input_steps=1
                                         known_future_inputs=known_future_inputs,
                                         output_steps=output_steps
                                         )
-        yield x, _y, y
+
+        # Skip samples with NaNs in x or y
+        if np.isnan(x).any() or np.isnan(y).any():
+            continue
+
+        yield x, y
 
 gen = sample_generator(data, lookback, num_inputs)
 
@@ -563,4 +567,42 @@ for idx, (x, _y, y) in enumerate(gen):
 for idx, (x, _y, y) in enumerate(gen):
     print(idx, x.shape, y.shape)
 
+# %%
 
+output_signature = (
+    tf.TensorSpec(shape=(4, 5), dtype=tf.float32),  # shape and dtype for x
+    tf.TensorSpec(shape=(1, 1), dtype=tf.float32)   # shape and dtype for y
+)
+
+dataset = tf.data.Dataset.from_generator(
+    sample_generator,
+    args=(data, lookback, num_inputs),
+    output_signature=output_signature
+)
+
+dataset
+
+# %%
+
+for idx, (x,y) in enumerate(dataset):
+    print(idx, type(x), type(y), x.shape, y.shape)
+
+# %%
+# getting batches instead of single samples (x,y pairs) during iteration
+dataset = tf.data.Dataset.from_generator(
+    sample_generator,
+    args=(data, lookback, num_inputs),
+    output_signature=output_signature
+)
+
+batch_size = 32
+dataset = dataset.shuffle(buffer_size=10000)
+dataset = dataset.batch(batch_size)
+dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+dataset
+
+# %%
+
+for idx, (x,y) in enumerate(dataset):
+    print(idx, type(x), type(y), x.shape, y.shape)
