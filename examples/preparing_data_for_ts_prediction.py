@@ -324,11 +324,40 @@ y[1]
 
 # %%
 # using know future inputs 
-x, _y, y = prepare_data(data, num_inputs=5, 
-                        lookback=4, 
-                        output_steps=2,
-                        input_steps=2,
+x, _y, y = prepare_data(data, 
+                        num_inputs=5, 
+                        lookback=4,
+                        forecast_step=1,
                         forecast_len=4,
+                        known_future_inputs=True)
+
+print(x.shape, _y.shape, y.shape)
+
+# %%
+
+x[0]
+
+# %%
+
+y[0]
+
+# %%
+
+x[1]
+
+# %%
+
+y[1]
+
+
+# using know future inputs with forecast_step=2
+x, _y, y = prepare_data(data, 
+                        num_inputs=5, 
+                        lookback=4,
+                        forecast_len=4,
+                        forecast_step=2,
+                        input_steps=2, 
+                        output_steps=2,
                         known_future_inputs=True)
 
 print(x.shape, _y.shape, y.shape)
@@ -529,6 +558,9 @@ for idx, (x, _y, y) in enumerate(gen):
     print(idx, x.shape, y.shape)
 
 # %%
-
+# Since we have drawn all the samples from generator and thus generator is exhausted
+# we don't get anymore samples from it
 for idx, (x, _y, y) in enumerate(gen):
     print(idx, x.shape, y.shape)
+
+

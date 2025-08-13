@@ -330,6 +330,7 @@ Either of num_inputs or num_outputs must be provided.
             horizons i.e. when forecast length/number of horizons to predict is > 1.
             known_future_inputs: {known_future_inputs}
             forecast_len: {forecast_len}"""
+        assert output_steps == input_steps == forecast_step, "different output_steps and input_steps with known_future_inputs are not supported yet"
 
     examples = len(data)
 
@@ -478,6 +479,7 @@ Either of num_inputs or num_outputs must be provided.
             horizons i.e. when forecast length/number of horizons to predict is > 1.
             known_future_inputs: {known_future_inputs}
             forecast_len: {forecast_len}"""
+        assert output_steps == input_steps == forecast_step, "different output_steps and input_steps with known_future_inputs are not supported yet"
 
     examples = len(data)
     
