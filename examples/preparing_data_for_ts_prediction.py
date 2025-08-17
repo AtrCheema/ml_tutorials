@@ -24,7 +24,7 @@ print('pd: ', pd.__version__)
 
 from utils import prepare_data, prepare_data_sample
 # %%
-# Here we create a simple dataset with 2000 rows and 1 columns i.e. a
+# First we create a simple dataset with 2000 rows and 1 columns i.e. a
 # univariate time series with no covariates.
 
 rows = 2000
@@ -69,9 +69,10 @@ _y[1]
 y[1]
 
 # %%
-# Here we create a simple dataset with 2000 rows and 6 columns. Each column can represent
+# Now we create a simple dataset with 2000 rows and 6 columns i.e. multivariate timeseries. Each column can represent
 # a different feature or variable in the time series data. The dataset is filled with sequential
 # integers for demonstration purposes.
+
 rows = 2000
 cols = 6
 data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
@@ -173,6 +174,9 @@ y[1]
 # %%
 # nowcasting vs forecasting
 # --------------------------
+# If forecast_step is > 0, it means we want to predict in future. 
+# It means we are predicting at t = t+1 which effectively means that we feed input data
+# at timestep t and predict the target at timestep t+1.
 
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4, forecast_step=1)
 
@@ -234,6 +238,8 @@ _y[1]
 y[1]
 
 # %%
+# If forecast_step is 0, that means make prediction at t=0 which means we are 
+# using the current input to predict the current output
 
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4, forecast_step=0, forecast_len=2)
 
@@ -564,13 +570,13 @@ def sample_generator(data:np.array,
 
 gen = sample_generator(data, lookback, num_inputs)
 
-for idx, (x, _y, y) in enumerate(gen):
+for idx, (x, y) in enumerate(gen):
     print(idx, x.shape, y.shape)
 
 # %%
 # Since we have drawn all the samples from generator and thus generator is exhausted
 # we don't get anymore samples from it
-for idx, (x, _y, y) in enumerate(gen):
+for idx, (x, y) in enumerate(gen):
     print(idx, x.shape, y.shape)
 
 # %%
