@@ -8,14 +8,19 @@ deep learning models/algorithms like LSTM/RNN.
 
 """
 
+import time
 import numpy as np
+import pandas as pd
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input, LSTM, Dense
 from tensorflow.keras.models import Model
 
+from aqua_fetch import RainfallRunoff
+
 print("tf: ", tf.__version__)
 print("np: ", np.__version__)
+print('pd: ', pd.__version__)
 
 from utils import prepare_data, prepare_data_sample
 # %%
@@ -537,7 +542,8 @@ y4
 
 # %%
 
-def sample_generator(data, lookback, num_inputs, num_outputs=None, input_steps=1, forecast_step=0, forecast_len=1, known_future_inputs=False, output_steps=1):
+def sample_generator(data:np.array, 
+                     lookback, num_inputs, num_outputs=None, input_steps=1, forecast_step=0, forecast_len=1, known_future_inputs=False, output_steps=1):
 
     for i in range(len(data) - lookback * input_steps + 1 - forecast_step - forecast_len * output_steps):
         x, _, y = prepare_data_sample(data, index=i, lookback=lookback, 
@@ -606,3 +612,118 @@ dataset
 
 for idx, (x,y) in enumerate(dataset):
     print(idx, type(x), type(y), x.shape, y.shape)
+
+# %%
+
+ds = RainfallRunoff('CAMELS_COL', verbosity=0)
+
+static, dynamic = ds.fetch()
+
+type(dynamic), len(dynamic)
+
+# %%
+
+dynamic['26247030'].shape
+
+# %%
+# get the total length of all DataFrames in dynamic
+
+sum(df.shape[0] for df in dynamic.values())
+
+# %%
+
+def sample_generator(
+        station_ids, 
+        lookback:int, 
+        num_inputs:int, 
+        num_outputs=None, input_steps=1, forecast_step=0, forecast_len=1, known_future_inputs=False, output_steps=1):
+
+    for stn in station_ids:
+
+        stn = stn.decode() if isinstance(stn, bytes) else stn
+
+        data = dynamic[stn].values
+
+        for i in range(len(data) - lookback * input_steps + 1 - forecast_step - forecast_len * output_steps):
+            x, _, y = prepare_data_sample(data, index=i, lookback=lookback, 
+                                            num_inputs=num_inputs, 
+                                            num_outputs=num_outputs,
+                                            input_steps=input_steps,
+                                            forecast_step=forecast_step,
+                                            forecast_len=forecast_len,
+                                            known_future_inputs=known_future_inputs,
+                                            output_steps=output_steps
+                                            )
+
+            # Skip samples with NaNs in x or y
+            if np.isnan(x).any() or np.isnan(y).any():
+                continue
+
+            yield x, y
+
+lookback = 365
+num_inputs = dynamic['26247030'].shape[1] - 1
+
+output_signature = (
+    tf.TensorSpec(shape=(lookback, num_inputs), dtype=tf.float32),  # shape and dtype for x
+    tf.TensorSpec(shape=(1, 1), dtype=tf.float32)   # shape and dtype for y
+)
+
+dataset = tf.data.Dataset.from_generator(
+    sample_generator,
+    args=(list(dynamic.keys())[0:10], lookback, num_inputs),
+    output_signature=output_signature
+)
+
+dataset
+
+# %%
+start = time.time()
+for idx, (x,y) in enumerate(dataset):
+    pass
+print(time.time() - start, 'seconds')
+# %%
+
+dataset = tf.data.Dataset.from_generator(
+    sample_generator,
+    args=(list(dynamic.keys())[0:10], lookback, num_inputs),
+    output_signature=output_signature
+)
+
+batch_size = 1024
+dataset = dataset.take(1_000_000)  # Limit to 1 million samples
+dataset = dataset.shuffle(buffer_size=10000)
+dataset = dataset.batch(batch_size)
+dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+dataset
+
+# %%
+start = time.time()
+for idx, (x,y) in enumerate(dataset):
+    pass
+print(time.time() - start, 'seconds')
+print(idx, x.shape, y.shape)
+
+# %%
+# using tf.keras utility function which highly optimized
+
+data = pd.concat([val for val in list(dynamic.values())[0:34]], axis=0)
+print(data.shape)
+dataset = tf.keras.utils.timeseries_dataset_from_array(
+    data.iloc[:, 0:-1].values,
+    targets=data.iloc[:, -1].values,
+    sequence_length=lookback,
+    batch_size=batch_size
+)
+
+dataset
+
+# %%
+start = time.time()
+for idx, (x,y) in enumerate(dataset):
+    pass
+print(time.time() - start, 'seconds')
+
+print(idx)
+print(x.shape, y.shape)

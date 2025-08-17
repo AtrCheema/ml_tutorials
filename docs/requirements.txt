@@ -16,3 +16,4 @@ protobuf==3.19.1
 numpy==1.21.6
 easy_mpl
 SeqMetrics
+git+https://github.com/hyex-research/AquaFetch.git@dev
