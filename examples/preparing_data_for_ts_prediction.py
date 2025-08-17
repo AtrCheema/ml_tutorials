@@ -273,7 +273,7 @@ y[1]
 x, _y, y = prepare_data(data, num_inputs=5, lookback=1, forecast_step=0)
 
 # %%
-# chaning input_steps
+# changing input_steps
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4, input_steps=2)
 
 print(x.shape, _y.shape, y.shape)
@@ -304,7 +304,7 @@ y[1]
 
 
 # %%
-# chaning output_steps
+# changing output_steps
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4, output_steps=2)
 
 print(x.shape, _y.shape, y.shape)
@@ -334,9 +334,9 @@ _y[1]
 y[1]
 
 # %%
-# using know future inputs 
-x, _y, y = prepare_data(data, 
-                        num_inputs=5, 
+# using known future inputs 
+x, _y, y = prepare_data(data,
+                        num_inputs=5,
                         lookback=4,
                         forecast_step=1,
                         forecast_len=4,
@@ -359,9 +359,9 @@ x[1]
 # %%
 
 y[1]
+# %%
+# using known future inputs with forecast_step=2
 
-
-# using know future inputs with forecast_step=2
 x, _y, y = prepare_data(data, 
                         num_inputs=5, 
                         lookback=4,
@@ -637,6 +637,11 @@ dynamic['26247030'].shape
 sum(df.shape[0] for df in dynamic.values())
 
 # %%
+# get the total length after dropping nan in last column
+
+sum(df.dropna(subset=[df.columns[-1]]).shape[0] for df in dynamic.values())
+
+# %%
 
 def sample_generator(
         station_ids, 
@@ -677,7 +682,7 @@ output_signature = (
 
 dataset = tf.data.Dataset.from_generator(
     sample_generator,
-    args=(list(dynamic.keys())[0:10], lookback, num_inputs),
+    args=(list(dynamic.keys())[0:34], lookback, num_inputs),
     output_signature=output_signature
 )
 
@@ -687,12 +692,14 @@ dataset
 start = time.time()
 for idx, (x,y) in enumerate(dataset):
     pass
-print(time.time() - start, 'seconds')
+print(round(time.time() - start, 2), 'seconds taken')
+print("index of last sample: ", idx)
+print(x.shape, y.shape)
 # %%
 
 dataset = tf.data.Dataset.from_generator(
     sample_generator,
-    args=(list(dynamic.keys())[0:10], lookback, num_inputs),
+    args=(list(dynamic.keys())[0:34], lookback, num_inputs),
     output_signature=output_signature
 )
 
@@ -708,8 +715,9 @@ dataset
 start = time.time()
 for idx, (x,y) in enumerate(dataset):
     pass
-print(time.time() - start, 'seconds')
-print(idx, x.shape, y.shape)
+print(round(time.time() - start, 2), 'seconds taken')
+print("index of last batch: ", idx)
+print(x.shape, y.shape)
 
 # %%
 # using tf.keras utility function which highly optimized
@@ -729,7 +737,7 @@ dataset
 start = time.time()
 for idx, (x,y) in enumerate(dataset):
     pass
-print(time.time() - start, 'seconds')
+print(round(time.time() - start, 2), 'seconds taken')
 
-print(idx)
+print("index of last batch: ", idx)
 print(x.shape, y.shape)
