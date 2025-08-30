@@ -45,7 +45,7 @@ x, _y, y = prepare_data(data, num_inputs=1, num_outputs=1, lookback=4)
 print(x.shape, _y.shape, y.shape)
 
 # %%
-
+# Checking the first sample/example/data point
 x[0]
 
 # %%
@@ -57,7 +57,7 @@ _y[0]
 y[0]
 
 # %%
-
+# Checking the second sample/example/data point
 x[1]
 
 # %%
@@ -69,7 +69,7 @@ _y[1]
 y[1]
 
 # %%
-# Now we create a simple dataset with 2000 rows and 6 columns i.e. multivariate timeseries. Each column can represent
+# Now we create another dataset with 2000 rows but with 6 columns i.e. multivariate timeseries. Each column can represent
 # a different feature or variable in the time series data. The dataset is filled with sequential
 # integers for demonstration purposes.
 
@@ -82,14 +82,15 @@ print(data[-10:])
 
 
 # %%
-# multivariate time series with no covariates
+# If this were a multivariate time series with no covariates then we would use 
+# the same approach as before i.e. set the num_inputs equal to that of num_outputs.
 
 x, _y, y = prepare_data(data, num_inputs=6, num_outputs=6, lookback=4)
 
 print(x.shape, _y.shape, y.shape)
 
 # %%
-
+# Checking the first sample/example/data point
 x[0]
 
 # %%
@@ -101,7 +102,7 @@ _y[0]
 y[0]
 
 # %%
-
+# Checking the second sample/example/data point
 x[1]
 
 # %%
@@ -113,6 +114,10 @@ _y[1]
 y[1]
 
 # %%
+# However, if this were a multivariate time series with covariates, i.e. one
+# timeseries column is our target variable and the others are input features,
+# we would need to adjust the data preparation accordingly.
+
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4)
 
 print(x.shape, _y.shape, y.shape)
@@ -142,6 +147,7 @@ _y[1]
 y[1]
 
 # %%
+# Consider the case where number of input features/timeseries are 4 and output features/timeseries are 2.
 
 x, _y, y = prepare_data(data, num_inputs=4, lookback=4)
 
@@ -175,7 +181,7 @@ y[1]
 # nowcasting vs forecasting
 # --------------------------
 # If forecast_step is > 0, it means we want to predict in future. 
-# It means we are predicting at t = t+1 which effectively means that we feed input data
+# It reflects that we are predicting at timestep t = `t+1` which effectively means that we feed input data
 # at timestep t and predict the target at timestep t+1.
 
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4, forecast_step=1)
@@ -183,7 +189,7 @@ x, _y, y = prepare_data(data, num_inputs=5, lookback=4, forecast_step=1)
 print(x.shape, _y.shape, y.shape)
 
 # %%
-
+# First sample
 x[0]
 
 # %%
@@ -195,7 +201,7 @@ _y[0]
 y[0]
 
 # %%
-
+# Second sample
 x[1]
 
 # %%
@@ -239,7 +245,7 @@ y[1]
 
 # %%
 # If forecast_step is 0, that means make prediction at t=0 which means we are 
-# using the current input to predict the current output
+# using input at current timestep to predict the output at current timestep.
 
 x, _y, y = prepare_data(data, num_inputs=5, lookback=4, forecast_step=0, forecast_len=2)
 
@@ -392,7 +398,7 @@ y[1]
 # %%
 # Handling missing values
 # --------------------------
-# missing values in the output
+# Consider the case where missing values are present in the output/target variable/feature
 
 data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
 rng = np.random.default_rng(seed=313)  # for reproducibility
@@ -430,7 +436,9 @@ y[3]
 y[4], y[5], y[6]
 
 # %%
-# removing all examples with NaN in the output
+# Now we should remove all examples with NaN in the output. This will definitely
+# reduce the number of samples.
+
 nan_idx_y = np.isnan(y).any(axis=(1, 2))
 
 non_nan_idx_y = np.invert(nan_idx_y)
@@ -441,7 +449,9 @@ y = y[non_nan_idx_y]
 
 print(x.shape, _y.shape, y.shape)
 
-# missing values in the input
+# %%
+# Now consider the case where missing values in the input features/variables as well
+
 data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
 rng = np.random.default_rng(seed=313)  # for reproducibility
 # put missing at random positions in the input data
@@ -468,7 +478,7 @@ x[-4]
 y[-4]
 
 # %%
-# removing all examples with NaN in the input
+# We should definitely remove all examples with NaN in the input (x)
 
 nan_idx_x = np.isnan(x).any(axis=(1, 2))
 
@@ -483,6 +493,12 @@ print(x.shape, _y.shape, y.shape)
 # %%
 # making batches
 # --------------
+# A batch represents a group of samples/examples (x,y) pairs. The concept of batch
+# is important in deep learning because neural networks are not training at once with
+# all the data but are trained with batches i.e. we divide the whole data into batches
+# then feed the a single batch to neural network , train with it and then feed the next
+# batch.
+
 lookback = 4
 num_inputs = 5
 data = np.arange(int(rows*cols)).reshape(-1,rows).transpose()
@@ -490,6 +506,8 @@ x, _y, y = prepare_data(data, num_inputs=num_inputs, lookback=lookback)
 print(x.shape, _y.shape, y.shape)
 
 # %%
+# Consider the following example of training an LSTM with a data of of ~2000 samples.
+
 inputs = Input(shape=(lookback, num_inputs))
 lstm = LSTM(32)(inputs)
 output = Dense(1)(lstm)
@@ -499,6 +517,9 @@ model.compile(optimizer='adam', loss='mse')
 
 # %%
 model.fit(x, y, epochs=2, batch_size=128)
+# %%
+# We see that when we trained the model with whole data i.e. 1997 samples, there
+# were 16 batches. This is because we set the batch size equal to 128.
 
 pred = model.predict(x)
 
@@ -506,9 +527,10 @@ pred = model.predict(x)
 # using generator
 # ---------------
 # In previous example, we had 1997 samples/examples, and each sample had shape (4, 5).
-# This is small data and we can fit it in memory.
+# Our ``x`` contained all the samples/examples. This is a small data and we can fit it (all the samples) in memory.
 # But in real world, we may have large datasets with e.g. millions of samples/examples
-# that cannot fit in memory.
+# that cannot fit in memory. This means we can not have x with millions of samples in memory especially
+# when each sample is also large.
 # In such cases, we can use a data generator to load and preprocess the data in batches ourselves.
 
 cols = 6
@@ -522,10 +544,13 @@ x0, _, y0 = prepare_data_sample(data, index=0, lookback=lookback, num_inputs=num
 x0
 
 # %%
+# The function prepare_data_sample returns a single sample/example/data point at a time
+# using the `index` parameter to specify which sample to return.
 
 y0
 
 # %%
+# So if we want to get the second sample/example/data point, we can call the function with index=1
 
 x1, _, y1 = prepare_data_sample(data, index=1, lookback=lookback, num_inputs=num_inputs)
 
@@ -537,8 +562,9 @@ y1
 
 
 # %%
+# Similarly, if we want to get the fifth sample/example/data point, we can call the function with index=4
 
-x4, _y4, y4 = prepare_data_sample(data, index=4, lookback=lookback, num_inputs=num_inputs)
+x4, _, y4 = prepare_data_sample(data, index=4, lookback=lookback, num_inputs=num_inputs)
 
 x4
 
@@ -547,6 +573,7 @@ x4
 y4
 
 # %%
+# Now we can create a generator function that yields samples from the dataset.
 
 def sample_generator(data:np.array, 
                      lookback, num_inputs, num_outputs=None, input_steps=1, forecast_step=0, forecast_len=1, known_future_inputs=False, output_steps=1):
@@ -580,6 +607,7 @@ for idx, (x, y) in enumerate(gen):
     print(idx, x.shape, y.shape)
 
 # %%
+# Now we can prepare tensorflow Dataset using the generator.
 
 output_signature = (
     tf.TensorSpec(shape=(4, 5), dtype=tf.float32),  # shape and dtype for x
@@ -595,6 +623,8 @@ dataset = tf.data.Dataset.from_generator(
 dataset
 
 # %%
+# The `dataset` is a generator which returns a single sample (x,y) pair
+# at each iteration
 
 for idx, (x,y) in enumerate(dataset):
     print(idx, type(x), type(y), x.shape, y.shape)
@@ -615,11 +645,16 @@ dataset = dataset.prefetch(tf.data.AUTOTUNE)
 dataset
 
 # %%
+# Now when we iterate over `dataset`, we don't get a single sample/example
+# (x,y) pair at each iteration but we get a batch of samples and the length/size
+# of the batch is determined by the `batch_size` parameter.
 
 for idx, (x,y) in enumerate(dataset):
     print(idx, type(x), type(y), x.shape, y.shape)
 
 # %%
+# Let's use a real world example. We get rainfall-runoff data for several hundred catchments/stations
+# from Columbia.
 
 ds = RainfallRunoff('CAMELS_COL', verbosity=0)
 
@@ -628,6 +663,7 @@ static, dynamic = ds.fetch()
 type(dynamic), len(dynamic)
 
 # %%
+# dynamic is a dictionary with keys as station names and each value is a DataFrame.
 
 dynamic['26247030'].shape
 
@@ -642,6 +678,7 @@ sum(df.shape[0] for df in dynamic.values())
 sum(df.dropna(subset=[df.columns[-1]]).shape[0] for df in dynamic.values())
 
 # %%
+# Now we make the sample_generator for given number of stations determined by `station_ids`
 
 def sample_generator(
         station_ids, 
@@ -689,6 +726,9 @@ dataset = tf.data.Dataset.from_generator(
 dataset
 
 # %%
+# Now we iterate over the `dataset` and measure the time taken
+# to get all the samples from 34 stations. We chose 34 because it is a manageable number for our example.
+
 start = time.time()
 for idx, (x,y) in enumerate(dataset):
     pass
@@ -696,6 +736,7 @@ print(round(time.time() - start, 2), 'seconds taken')
 print("index of last sample: ", idx)
 print(x.shape, y.shape)
 # %%
+# getting batches instead of single samples (x,y pairs) during iteration
 
 dataset = tf.data.Dataset.from_generator(
     sample_generator,
@@ -712,6 +753,10 @@ dataset = dataset.prefetch(tf.data.AUTOTUNE)
 dataset
 
 # %%
+# Now when we iterate over `dataset`, we don't get a single sample/example
+# (x,y) pair at each iteration but we get a batch of samples and the length/size
+# of the batch is determined by the `batch_size` parameter.
+
 start = time.time()
 for idx, (x,y) in enumerate(dataset):
     pass
