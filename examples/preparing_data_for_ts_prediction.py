@@ -527,11 +527,15 @@ pred = model.predict(x)
 # using generator
 # ---------------
 # In previous example, we had 1997 samples/examples, and each sample had shape (4, 5).
-# Our ``x`` contained all the samples/examples. This is a small data and we can fit it (all the samples) in memory.
+# Our ``x`` contained all the samples/examples. Since this is a small data therefore we can fit it (all the samples) in memory.
 # But in real world, we may have large datasets with e.g. millions of samples/examples
-# that cannot fit in memory. This means we can not have x with millions of samples in memory especially
+# (all of) which cannot fit in memory. This means we can not have x with millions of samples in memory especially
 # when each sample is also large.
 # In such cases, we can use a data generator to load and preprocess the data in batches ourselves.
+# What do we do in such a case? We prepare data only for those many samples/examples
+# which are required at the moment. That means our `x` at a certain moment does not
+# consist of all the samples/examples but only those that are needed for the current
+# **batch**.
 
 cols = 6
 rows = 200
